@@ -32,9 +32,11 @@ std::string NCursesDisplay::ProgressBar(float percent)
 void NCursesDisplay::DisplaySystem(System& system, WINDOW* window)
 {
 	int row{ 0 };
+	// move the cursor to specific location and print text
 	mvwprintw(window, ++row, 2, "%s", ("OS: " + system.OperatingSystem()).c_str());
 	mvwprintw(window, ++row, 2, "%s", ("Kernel: " + system.Kernel()).c_str());
 	mvwprintw(window, ++row, 2, "CPU: ");
+	// enable specific text attribute within a given window 
 	wattron(window, COLOR_PAIR(1));
 	mvwprintw(window, row, 10, "%s", "");
 	wprintw(window, "%s", ProgressBar(system.Cpu().Utilization()).c_str());
@@ -51,6 +53,7 @@ void NCursesDisplay::DisplaySystem(System& system, WINDOW* window)
 		("Running Processes: " + to_string(system.RunningProcesses())).c_str());
 	mvwprintw(window, ++row, 2, "%s",
 		("Up Time: " + Format::ElapsedTime(system.UpTime())).c_str());
+	// update specific window
 	wrefresh(window);
 }
 
@@ -98,13 +101,19 @@ void NCursesDisplay::Display(System& system, int n)
 	start_color();  // enable color
 
 	int x_max{ getmaxx(stdscr) };
+	// create a new window on the terminal screen with these params: height, width, starty, startx
 	WINDOW* system_window = newwin(9, x_max - 1, 0, 0);
 	WINDOW* process_window =
 		newwin(3 + n, x_max - 1, system_window->_maxy + 1, 0);
 
 	while (1) {
+		// define a color pair, which assigns foreground and background colors to a specific number
+		// params: pair_number, foreground, background
 		init_pair(1, COLOR_BLUE, COLOR_BLACK);
 		init_pair(2, COLOR_GREEN, COLOR_BLACK);
+		// draw a border around the window
+		// params: *win, vertical_character, horizontal_character
+		// vertical_character and horizontal_character = 0 uses the default line-drawing characters
 		box(system_window, 0, 0);
 		box(process_window, 0, 0);
 		DisplaySystem(system, system_window);

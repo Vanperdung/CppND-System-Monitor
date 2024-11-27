@@ -3,39 +3,105 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <regex>
 
 #include "process.h"
 #include "processor.h"
 #include "system.h"
+#include "linux_parser.h"
 
 using std::set;
 using std::size_t;
 using std::string;
 using std::vector;
-/*You need to complete the mentioned TODOs in order to satisfy the rubric criteria "The student will be able to extract and display basic data about the system."
+// DONE
+Processor &System::Cpu()
+{
+    return cpu_;
+}
 
-You need to properly format the uptime. Refer to the comments mentioned in format. cpp for formatting the uptime.*/
+// DONE
+bool System::is_id_in_process_list(int pid)
+{
+    for (int i = 0; i < (int)processes_.size(); i++)
+    {
+        if (processes_[i].Pid() == pid) return true;
+    }
+    return false;
+}
 
-// TODO: Return the system's CPU
-Processor& System::Cpu() { return cpu_; }
+// DONE
+bool System::is_process_in_list(int pid, std::vector<int> list)
+{
+    for (int i = 0; i < (int)list.size(); i++)
+    {
+        if (list[i] == pid) return true;
+    }
+    return false;
+}
 
-// TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
+// DONE
+static bool compareProcess(Process p1, Process p2)
+{
+    return (p2 < p1);
+}
 
-// TODO: Return the system's kernel identifier (string)
-std::string System::Kernel() { return string(); }
+// DONE
+vector<Process> &System::Processes()
+{
+    vector<int> all_process = LinuxParser::Pids();
+    for (int i = 0; i < (int)all_process.size(); i++)
+    {
+        if (is_id_in_process_list(all_process[i]) == false)
+        {
+            Process temp(all_process[i]);
+            processes_.push_back(temp);
+        }
+    }
 
-// TODO: Return the system's memory utilization
-float System::MemoryUtilization() { return 0.0; }
+    for (int i = 0; i < (int)processes_.size(); i++)
+    {
+        if (is_process_in_list(processes_[i].Pid(), all_process) == false)
+        {
+            processes_.erase(processes_.begin() + i);
+            i = 0;
+        }
+    }
 
-// TODO: Return the operating system name
-std::string System::OperatingSystem() { return string(); }
+    sort(processes_.begin(), processes_.end(), compareProcess); 
 
-// TODO: Return the number of processes actively running on the system
-int System::RunningProcesses() { return 0; }
+    return processes_;
+}
 
-// TODO: Return the total number of processes on the system
-int System::TotalProcesses() { return 0; }
+std::string System::Kernel() 
+{
+    return LinuxParser::Kernel();
+}
 
-// TODO: Return the number of seconds since the system started running
-long int System::UpTime() { return 0; }
+float System::MemoryUtilization() 
+{ 
+    return LinuxParser::MemoryUtilization();
+}
+
+std::string System::OperatingSystem() 
+{
+    return LinuxParser::OperatingSystem(); 
+}
+
+int System::RunningProcesses()
+{
+    return LinuxParser::RunningProcesses();
+}
+
+int System::TotalProcesses()
+{
+    return LinuxParser::TotalProcesses();
+}
+
+long int System::UpTime() 
+{ 
+    return LinuxParser::UpTime(); 
+}
